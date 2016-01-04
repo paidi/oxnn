@@ -54,5 +54,8 @@ local model = nn.Sequential()
            :add(bwd_model))
    :add(nn.JoinTable(2))
 
-print(model:forward(input))
+-- Forward and backward
+local output = model:forward(input)
+local gradOutput = torch.rand(output:size())
+model:backward(input, gradOutput)
 
