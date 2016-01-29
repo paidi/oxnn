@@ -1,8 +1,8 @@
 -- Example creating a bidirectional LSTM encoder
 require 'oxnn'
 
-local vocabSize = 100
-local hiddenSize = 100
+local vocabSize = 10
+local hiddenSize = 5
 local fwd_model = nn.Sequential()
    :add(oxnn.SequenceOfWords{
            lookuptable = nn.Sequential():add(nn.LookupTable(vocabSize, 
@@ -48,14 +48,45 @@ local input = {
    }   
 }
 
-local model = nn.Sequential()
+local encoder = nn.Sequential()
    :add(nn.ParallelTable()
            :add(fwd_model)
            :add(bwd_model))
    :add(nn.JoinTable(2))
+   :add(nn.Linear(2*hiddenSize, hiddenSize))
 
+local decoder = nn.Sequential()
+   :add(oxnn.SequenceOfWords{
+           lookuptable = nn.Sequential():add(nn.LookupTable(vocabSize, 
+                                                            hiddenSize))
+              :add(nn.SplitTable(2)),
+           recurrent = oxnn.ModelUtil.LSTMCell1(
+              nn.Linear(hiddenSize, hiddenSize),
+              nn.Linear(hiddenSize, hiddenSize),
+              true),
+           output = nn.Sequential()
+              :add(nn.Linear(hiddenSize, vocabSize))
+              :add(oxnn.LogSoftMaxInplace(true,true)),
+           loss = 'nllloss'})
+   :add(nn.SelectTable(2))
+        
 -- Forward and backward
-local output = model:forward(input)
-local gradOutput = torch.rand(output:size())
-model:backward(input, gradOutput)
+local encoding = encoder:forward(input)
+local decoderInput =    {
+   { { encoding, torch.zeros(2,hiddenSize) } },
+   torch.Tensor{ 
+      { 1, 7, 9, 2 },   -- sentence 1
+      { 1, 3, 2, 2 }    -- sentence 2
+   },
+   { 4, 3 }  -- sentence lengths
+}
+
+decoder.modules[1].rp.debug = 3
+local loss = decoder:forward(decoderInput)
+print(loss)
+
+decoder:backward(decoderInput, 0)
+
+--local gradutput = torch.rand(output:size())
+--model:backward(input, gradOutput)
 
