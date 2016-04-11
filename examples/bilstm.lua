@@ -74,19 +74,13 @@ local decoder = nn.Sequential()
 local encoding = encoder:forward(input)
 local decoderInput =    {
    { { encoding, torch.zeros(2,hiddenSize) } },
-   torch.Tensor{ 
+   torch.LongTensor{ 
       { 1, 7, 9, 2 },   -- sentence 1
       { 1, 3, 2, 2 }    -- sentence 2
    },
    { 4, 3 }  -- sentence lengths
 }
 
-decoder.modules[1].rp.debug = 3
 local loss = decoder:forward(decoderInput)
-print(loss)
-
-decoder:backward(decoderInput, 0)
-
---local gradutput = torch.rand(output:size())
---model:backward(input, gradOutput)
+encoder:backward(input, decoder:backward(decoderInput, 0)[1][1][1])
 
