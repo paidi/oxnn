@@ -350,8 +350,8 @@ function SequenceOfWords:reset(stdv)
    self.rp:reset(stdv)
 end
 
-function SequenceOfWords:type(type)
-   parent.type(self, type)
+function SequenceOfWords:type(type, tensorCache)
+   parent.type(self, type, tensorCache)
    if self._split_module then
       self._split_module:type(type=='torch.CudaTensor' and 'torch.CudaTensor' or 'torch.LongTensor')
    end

@@ -586,7 +586,7 @@ end
 function RecurrentPropagator:share(mlp,...)
    assert(false)
    for i=1,#self.modules do
-      self.modules[i]:share(mlp.modules[i],...); 
+      self.modules[i]:share(mlp.modules[i],...);
    end
 end
 
@@ -636,9 +636,9 @@ function RecurrentPropagator:clearState()
    end
 end
 
-function RecurrentPropagator:type(type)
+function RecurrentPropagator:type(type, tensorCache)
    self:clearState()
-   parent.type(self, type)
+   parent.type(self, type, tensorCache)
    self._type = type
    return self
 end
